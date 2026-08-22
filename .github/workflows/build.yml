@@ -1,8 +1,6 @@
 name: docker build
 
 on:
-  schedule:
-    - cron: "0 5 * * 1"
   push:
     branches:
       - "main"
@@ -14,6 +12,11 @@ on:
       - "main"
       - "dev"
       - "test"
+  workflow_dispatch:
+     inputs:
+       reason:
+         required: false
+         description: "Reason for running this workflow"
 
 jobs:
   docker:
