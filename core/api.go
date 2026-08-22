@@ -460,7 +460,7 @@ func (s *APIServer) getRecentInterestingAircraft(c *gin.Context, group string) {
 	aircraft := []gin.H{}
 	for rows.Next() {
 		var icao, registration, operator, aircraftType, icaoType, group, category string
-		var tag1, tag2, tag3 string
+		var tag1, tag2, tag3 *string // Use pointers for nullable fields
 		var imageLink1, imageLink2, imageLink3 *string // Use pointers for nullable fields
 		var hex, flight string
 		var seen *time.Time
