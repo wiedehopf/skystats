@@ -383,7 +383,8 @@ func (s *APIServer) getAboveStats(c *gin.Context) {
 			&destinationIATACode, &destinationICAOCode, &destinationName, &routeDistance)
 		if err != nil {
 			log.Error().Err(err).Msg("getAboveStats()")
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		aircraft = append(aircraft, gin.H{
@@ -469,7 +470,8 @@ func (s *APIServer) getRecentInterestingAircraft(c *gin.Context, group string) {
 			&group, &category, &tag1, &tag2, &tag3, &imageLink1, &imageLink2, &imageLink3,
 			&hex, &flight, &seen, &seenEpoch)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		aircraft = append(aircraft, gin.H{
@@ -523,7 +525,8 @@ func (s *APIServer) getFastestAircraft(c *gin.Context) {
 		err := rows.Scan(&hex, &flight, &registration, &aircraftType, &firstSeen,
 			&lastSeen, &groundSpeed, &indicatedAirSpeed, &trueAirSpeed)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		aircraft = append(aircraft, gin.H{
@@ -569,7 +572,8 @@ func (s *APIServer) getSlowestAircraft(c *gin.Context) {
 		err := rows.Scan(&hex, &flight, &registration, &aircraftType, &firstSeen,
 			&lastSeen, &groundSpeed, &indicatedAirSpeed, &trueAirSpeed)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		aircraft = append(aircraft, gin.H{
@@ -614,7 +618,8 @@ func (s *APIServer) getHighestAircraft(c *gin.Context) {
 		err := rows.Scan(&hex, &flight, &registration, &aircraftType, &firstSeen,
 			&lastSeen, &barometricAltitude, &geometricAltitude)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		aircraft = append(aircraft, gin.H{
@@ -658,7 +663,8 @@ func (s *APIServer) getLowestAircraft(c *gin.Context) {
 		err := rows.Scan(&hex, &flight, &registration, &aircraftType, &firstSeen,
 			&lastSeen, &barometricAltitude, &geometricAltitude)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		aircraft = append(aircraft, gin.H{
@@ -734,7 +740,8 @@ func (s *APIServer) getTopAircraftTypes(c *gin.Context, period string, flightora
 		err := rows.Scan(&aircraft_type, &count, &percentage)
 
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		aircraft = append(aircraft, gin.H{
@@ -784,7 +791,8 @@ func (s *APIServer) getTopRoutes(c *gin.Context) {
 
 		err := rows.Scan(&route, &origin_iata_code, &origin_name, &destination_iata_code, &destination_name, &flight_count)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		results = append(results, gin.H{
@@ -833,7 +841,8 @@ func (s *APIServer) getTopDestinationCountries(c *gin.Context) {
 
 		err := rows.Scan(&destination_country_name, &destination_country_iso_name, &flight_count)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		results = append(results, gin.H{
@@ -879,7 +888,8 @@ func (s *APIServer) getTopOriginCountries(c *gin.Context) {
 
 		err := rows.Scan(&origin_country_name, &origin_country_iso_name, &flight_count)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		results = append(results, gin.H{
@@ -928,7 +938,8 @@ func (s *APIServer) getTopAirlines(c *gin.Context) {
 
 		err := rows.Scan(&airline_name, &airline_icao, &airline_iata, &flight_count)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		results = append(results, gin.H{
@@ -999,7 +1010,8 @@ func (s *APIServer) getTopDomesticAirports(c *gin.Context) {
 
 		err := rows.Scan(&airport_code, &airport_name, &airport_country, &flight_count)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		results = append(results, gin.H{
@@ -1070,7 +1082,8 @@ func (s *APIServer) getTopInternationalAirports(c *gin.Context) {
 
 		err := rows.Scan(&airport_code, &airport_name, &airport_country, &flight_count)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		results = append(results, gin.H{
@@ -1386,7 +1399,8 @@ func (s *APIServer) getChartAircraftOverTime(c *gin.Context, period string) {
 
 		err := rows.Scan(&timeVal, &count)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		results = append(results, ChartPoint{
