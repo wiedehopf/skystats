@@ -27,11 +27,17 @@ func updateRoutes(pg *postgres) {
 		return
 	}
 
-	if len(aircrafts) > 100 {
-		aircrafts = aircrafts[:100]
+	existing, new := checkRouteExists(pg, aircrafts)
+
+	if len(new) == 0 {
+		return
 	}
 
-	existing, new := checkRouteExists(pg, aircrafts)
+	if len(new) > 100 {
+		new = new[:100]
+	}
+
+	log.Debug().Msgf("Getting routes for %d aircraft.", len(new))
 
 	routes, err := getRoutes(new)
 	if err != nil {
@@ -104,7 +110,7 @@ func checkRouteExists(pg *postgres, aircraftToProcess []Aircraft) (existing []Ai
 		FROM route_data
 		WHERE route_callsign = ANY($1::text[])
 		  AND last_updated IS NOT NULL
-		  AND last_updated > NOW() - INTERVAL '1 hour'`
+		  AND last_updated > NOW() - INTERVAL '18 hours'`
 
 	rows, err := pg.db.Query(context.Background(), query, callsignValues)
 
