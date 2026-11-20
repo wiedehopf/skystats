@@ -65,6 +65,7 @@ Alternatively there are some [Advanced Setup](#advanced-setup) options.
 | LON | Longitude of your receiver. | `YY.YYYYYY` |
 | RADIUS | Distance in km from your receiver that you want to record aircraft. Set to a distance greater than that of your receiver to capture all aircraft. | `1000` |
 | ABOVE_RADIUS | Radius for the "Above Timeline" <br/> **Note: currently only 20km supported.** | `20` |
+| INCLUDE_POSITIONLESS_AIRCRAFT | Optional. Set to `true` to also record aircraft received without a position (e.g. Mode S only). These can't be checked against `RADIUS`. | `false` |
 | LOG_LEVEL | Logging level e.g. `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`. <br/><br/> The default/recommended level is `INFO`, but `DEBUG` can be used if needed. <br/><br/> Note: `DEBUG` will also cause the Gin API server to run in "debug" mode with more verbose logging. |`INFO`|
 
 <br/>

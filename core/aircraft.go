@@ -42,6 +42,15 @@ func updateAircraftDatabase(pg *postgres) {
 			continue
 		}
 
+		// Aircraft without a position (e.g. Mode S only) can't be checked
+		// against the radius, they would be measured from 0,0
+		if !hasPosition(aircraft) {
+			if includePositionless() {
+				aircraftsInRange = append(aircraftsInRange, aircraft)
+			}
+			continue
+		}
+
 		// Filter out aircraft not within radius
 		planeLoc := []float64{aircraft.Lon, aircraft.Lat}
 		distance := getRuler().Distance(loc, planeLoc)
@@ -52,6 +61,15 @@ func updateAircraftDatabase(pg *postgres) {
 
 	}
 	pg.updateDatabase(response.Now, aircraftsInRange)
+}
+
+// readsb omits lat/lon when it has no position, which unmarshals to 0,0.
+func hasPosition(aircraft Aircraft) bool {
+	return aircraft.Lat != 0 || aircraft.Lon != 0
+}
+
+func includePositionless() bool {
+	return os.Getenv("INCLUDE_POSITIONLESS_AIRCRAFT") == "true"
 }
 
 func isNonAircraft(aircraft Aircraft) bool {
@@ -182,7 +200,13 @@ func insertNewAircrafts(pg *postgres, nowEpoch float64, existingAircrafts map[st
 	for _, aircraft := range aircrafts {
 		_, exists := existingAircrafts[aircraft.Hex]
 		if !exists {
-			lastSeenDistance := getDistance([]float64{aircraft.Lon, aircraft.Lat})
+			// Store NULL rather than 0,0 for aircraft without a position, so
+			// they never show up in distance-based stats.
+			var lat, lon, lastSeenDistance any
+			if hasPosition(aircraft) {
+				lat, lon = aircraft.Lat, aircraft.Lon
+				lastSeenDistance = getDistance([]float64{aircraft.Lon, aircraft.Lat})
+			}
 			aircraftsToInsert = append(aircraftsToInsert, aircraft)
 			insertStatement := `
 				INSERT INTO aircraft_data (
@@ -242,8 +266,8 @@ func insertNewAircrafts(pg *postgres, nowEpoch float64, existingAircrafts map[st
 				nowAsEpoch,
 				nowAsTime,
 				nowAsEpoch,
-				aircraft.Lat,
-				aircraft.Lon,
+				lat,
+				lon,
 				lastSeenDistance,
 				aircraft.Type,
 				aircraft.R,
@@ -258,8 +282,8 @@ func insertNewAircrafts(pg *postgres, nowEpoch float64, existingAircrafts map[st
 				aircraft.NavQnh,
 				aircraft.NavAltitudeMcp,
 				aircraft.NavHeading,
-				aircraft.Lat,
-				aircraft.Lon,
+				lat,
+				lon,
 				aircraft.Nic,
 				aircraft.Rc,
 				aircraft.SeenPos,
@@ -314,14 +338,17 @@ func updateExistingAircrafts(pg *postgres, nowEpoch float64, aircrafts []Aircraf
 		existingAircraft.LastSeenEpoch = nowEpoch
 		existingAircraft.LastSeen = time.Unix(int64(nowEpoch), 0)
 
-		// Update last_seen_lat, last_seen_lon, last_seen_distance with the latest lat/lon
-		existingAircraft.LastSeenLat = sql.NullFloat64{Float64: aircraft.Lat, Valid: true}
-		existingAircraft.LastSeenLon = sql.NullFloat64{Float64: aircraft.Lon, Valid: true}
-		lastSeenDistance := getDistance([]float64{aircraft.Lon, aircraft.Lat})
-		existingAircraft.LastSeenDistance = sql.NullFloat64{Float64: *lastSeenDistance, Valid: true}
+		// Update last_seen_lat, last_seen_lon, last_seen_distance with the latest lat/lon.
+		// Keep the last known position when this update has none.
+		if hasPosition(aircraft) {
+			existingAircraft.LastSeenLat = sql.NullFloat64{Float64: aircraft.Lat, Valid: true}
+			existingAircraft.LastSeenLon = sql.NullFloat64{Float64: aircraft.Lon, Valid: true}
+			lastSeenDistance := getDistance([]float64{aircraft.Lon, aircraft.Lat})
+			existingAircraft.LastSeenDistance = sql.NullFloat64{Float64: *lastSeenDistance, Valid: true}
+		}
 
 		// Update destination distance
-		if aircraft.Flight != "" {
+		if aircraft.Flight != "" && hasPosition(aircraft) {
 			routeData, err := getRouteData(pg, aircraft.Flight)
 			if err != nil {
 			} else if routeData != nil && routeData.DestinationLatitude.Valid && routeData.DestinationLongitude.Valid {
